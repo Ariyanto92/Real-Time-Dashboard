@@ -1,8 +1,9 @@
-/* === CSS UTAMA === */
 * {
+    /* PERBAIKAN 1: Hapus padding tanpa unit. Cukup atur margin & box-sizing. */
     box-sizing: border-box;
     margin: 0;
-    padding: 5;
+    /* padding: 5; <== Dihapus/diperbaiki, karena '5' tanpa unit tidak valid */
+    padding: 0; /* Mengatur ke 0 adalah praktik yang lebih aman untuk * */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -23,7 +24,7 @@ header {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-    padding: 5px;
+    padding: 10px 15px; /* Sedikit penyesuaian padding agar lebih terlihat rapi */
     background: rgba(255, 255, 255, 0.1);
     border-radius: 15px;
     backdrop-filter: blur(10px);
@@ -141,11 +142,12 @@ button:hover {
     cursor: pointer;
     transition: background 0.3s;
     font-weight: 600;
-    margin-left: 10px;
+    margin-left: 10px; 
 }
 .lang-toggle:hover {
     background: #2980b9;
 }
+/* === END GAYA TOMBOL BAHASA & ADMIN === */
 
 /* === GAYA FILTER === */
 .filter-group {
@@ -180,6 +182,7 @@ button:hover {
 .custom-range button {
     padding: 8px 15px;
 }
+/* === END GAYA FILTER === */
 
 /* === GAYA MODAL/POPUP BARU === */
 .modal {
@@ -251,11 +254,12 @@ button:hover {
 }
 
 .reset-btn {
-    background: #c0392b !important;
+    background: #c0392b !important; 
 }
 .save-btn {
-    background: #27ae60 !important;
+    background: #27ae60 !important; 
 }
+/* --- END GAYA MODAL/POPUP BARU --- */
 
 .stats-cards {
     display: grid;
@@ -462,7 +466,7 @@ button:hover {
     .charts-container { grid-template-columns: 1fr; }
 }
 
-/* === MEDIA QUERY UNTUK MOBILE === */
+/* === MEDIA QUERY UNTUK MOBILE (PENTING) === */
 @media (max-width: 768px) {
     .stats-cards { grid-template-columns: 1fr 1fr; }
     header { flex-direction: column; text-align: center; }
@@ -470,9 +474,10 @@ button:hover {
     .stat-value { font-size: 1.8rem; }
     .data-table th, .data-table td { padding: 10px; font-size: 0.9rem; }
     
+    /* Mengubah Kontrol kembali ke tata letak kolom agar rapi di layar kecil */
     .controls, .table-controls { 
         flex-direction: column; 
-        align-items: stretch;
+        align-items: stretch; 
     }
     .filter-group, .custom-range, .table-controls .left, .table-controls .right { 
         flex-direction: column; 
@@ -482,9 +487,10 @@ button:hover {
     .filter-group select, .custom-range input, .custom-range button { width: 100%; }
     .table-controls input, .table-controls select, .export-btn { width: 100%; }
 
+    /* Menghapus dorongan 'margin-left: auto' agar tombol berada di tengah */
     #reloadGroup {
         flex-direction: column;
-        align-items: center;
+        align-items: center; 
         width: 100%;
         margin-left: 0; 
     }
@@ -494,6 +500,7 @@ button:hover {
         width: 95%;
     }
 }
+/* === END MEDIA QUERY === */
 
 @media (max-width: 480px) {
     .stats-cards { grid-template-columns: 1fr; }
