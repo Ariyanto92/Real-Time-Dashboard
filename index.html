@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Real Time Monitoring</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/locale/id.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo">
+            <img src="https://raw.githubusercontent.com/Ariyanto92/esp32-assets/b51d45111c451a3522a8eb6f642587893afa9c11/logo1.png">
+        </div>
+        <div class="header-text">
+            <h1>Dashboard Real Time Monitoring</h1>
+            <p class="description">Monitoring Real-time Production</p>
+        </div>
+    </header>
+
+    <div class="controls">
+        <button id="loadData">⟳ Muat Ulang Data</button>
+        <div class="refresh-status">Auto Refresh: AKTIF (30 detik)</div>
+    </div>
+
+    <div class="stats-cards">
+        <div class="stat-card"><h3>RATA-RATA CYCLE TIME</h3><div class="stat-value" id="avgCycleTime">0</div></div>
+        <div class="stat-card"><h3>TOTAL CYCLE</h3><div class="stat-value" id="totalCycles">0</div></div>
+        <div class="stat-card"><h3>CYCLE TERAKHIR</h3><div class="stat-value" id="lastCycleTime">0</div></div>
+        <div class="stat-card"><h3>CYCLE TERCEPAT</h3><div class="stat-value" id="minCycleTime">0</div></div>
+    </div>
+
+    <div class="charts-container">
+        <div class="chart-wrapper">
+            <h2 class="chart-title">GRAFIK CYCLE TIME</h2>
+            <div class="chart-container">
+                <canvas id="cycleTimeChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-wrapper">
+            <h2 class="chart-title">STATUS PRODUKSI</h2>
+            <div class="chart-container">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="data-table-container">
+        <h2 class="chart-title">DATA CYCLE TIME</h2>
+
+        <div class="table-controls">
+            <div class="left">
+                <input id="searchInput" placeholder="Cari data...">
+                <select id="rowsPerPage">
+                    <option value="10">10 / halaman</option>
+                    <option value="25">25 / halaman</option>
+                    <option value="50">50 / halaman</option>
+                </select>
+            </div>
+            <div class="right">
+                <button id="exportCsvBtn">⬇ Export CSV</button>
+            </div>
+        </div>
+
+        <div id="tableContainer"></div>
+        <div class="pagination" id="pagination"></div>
+        <div id="lastUpdated"></div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
