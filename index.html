@@ -4,23 +4,146 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-key="title">Dashboard Real Time Monitoring</title>
-
-    <!-- Library -->
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/locale/id.min.js"></script>
-
-    <!-- CSS External -->
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="https://raw.githubusercontent.com/Ariyanto92/esp32-assets/b51d45111c451a3522a8eb6f642587893afa9c11/logo1.png" alt="Logo ARAYA Tech">
+            </div>
+            <div class="header-text">
+                <h1 data-key="mainTitle">Dashboard Real Time Monitoring</h1>
+                <p class="description" data-key="subTitle">Monitoring Real-time Production</p>
+            </div>
+            <div class="lang-toggle" id="languageToggle">English</div>
+            <div class="lang-toggle" id="adminLoginToggle">Admin</div>
+        </header>
+        
+        <div class="controls">
+            <div class="filter-group">
+                <label for="datePreset" data-key="filterLabel">Filter Data:</label>
+                <select id="datePreset">
+                    <option value="today" data-key="filterToday">Hari ini</option>
+                    <option value="yesterday" data-key="filterYesterday">Kemarin</option>
+                    <option value="currentWeek" data-key="filterWeek">Minggu ini</option>
+                    <option value="currentMonth" data-key="filterMonth">Bulan ini</option>
+                    <option value="all" data-key="filterAll" selected>Semua Data</option>
+                    <option value="custom" data-key="filterCustom">Kustom (Range Tanggal)</option>
+                </select>
+            </div>
+            <div class="custom-range" id="customRangeControls" style="display: none;">
+                <input type="date" id="startDate" title="Tanggal Mulai">
+                <input type="date" id="endDate" title="Tanggal Akhir">
+                <button id="applyFilterBtn" data-key="filterApplyBtn">Terapkan</button>
+            </div>
+            <div id="reloadGroup">
+                <button id="loadData" data-key="reloadButton">⟳ Muat Ulang Data</button>
+                <div class="refresh-status" data-key="refreshStatus">Auto Refresh (2 detik)</div>
+            </div>
+        </div>
+        
+        <div class="stats-cards">
+            <div class="stat-card">
+                <h3 data-key="statAvgCycle">RATA-RATA CYCLE TIME</h3>
+                <div class="stat-value" id="avgCycleTime">40.75s</div>
+                <div class="stat-subvalue"><span data-key="statTarget">Target</span>: 60.00s</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-key="statTotalCycles">TOTAL CYCLE</h3>
+                <div class="stat-value" id="totalCycles">270</div>
+                <div class="stat-subvalue" data-key="statToday">Hari ini: 24</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-key="statLastCycle">CYCLE TIME TERAKHIR</h3>
+                <div class="stat-value" id="lastCycleTime">38.42s</div>
+                <div class="stat-subvalue" id="lastCycleStatus" data-key="statStatusPrefix">Status: NORMAL</div>
+            </div>
+            <div class="stat-card">
+                <h3 data-key="statMinCycle">CYCLE TIME TERCEPAT</h3>
+                <div class="stat-value" id="minCycleTime">0.00s</div>
+                <div class="stat-subvalue" data-key="statMaxCycle">Terlama: 1612.34s</div>
+            </div>
+        </div>
+        
+        <div class="charts-container">
+            <div class="chart-wrapper">
+                <h2 class="chart-title" data-key="chartTitle1">GRAFIK CYCLE TIME</h2>
+                <div class="chart-container">
+                    <canvas id="cycleTimeChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-wrapper">
+                <h2 class="chart-title" data-key="chartTitle2">STATUS</h2>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="data-table-container">
+            <h2 class="chart-title" data-key="tableTitle">DATA CYCLE TIME</h2>
 
-    <!-- ======= SEMUA HTML ANDA TETAP SAMA (TIDAK DIUBAH) ======= -->
-    <!-- ❗ Saya hanya memindahkan tag <style> dan <script> saja -->
+            <div class="table-controls">
+                <div class="left">
+                    <input type="text" id="searchInput" placeholder="Cari data (tanggal, cycle, status)..." data-key-placeholder="searchPlaceholder">
+                    <select id="rowsPerPage">
+                        <option value="10" data-key-select="rowsPerPage">10 / halaman</option>
+                        <option value="25" data-key-select="rowsPerPage">25 / halaman</option>
+                        <option value="50" data-key-select="rowsPerPage">50 / halaman</option>
+                        <option value="100" data-key-select="rowsPerPage">100 / halaman</option>
+                    </select>
+                </div>
+                <div class="right">
+                    <button class="export-btn" id="exportCsvBtn" data-key="exportButton">⬇ Export CSV</button>
+                </div>
+            </div>
+            <div id="tableContainer">
+                <div class="loading" data-key="loadingMessage">Memuat data production...</div>
+            </div>
 
-    [SELURUH ISI BODY ANDA TETAP SAMA 100%]
-    
-    <!-- JS External -->
+            <div class="pagination" id="pagination"></div>
+            <div class="last-updated" id="lastUpdated" data-key="lastUpdatedPrefix"></div>
+        </div>
+    </div>
+
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 data-key="adminLoginTitle">Login Admin</h2>
+            <input type="text" id="adminUsername" placeholder="Username">
+            <input type="password" id="adminPassword" placeholder="Password">
+            <button id="loginAdminBtn">Login</button>
+            <p id="loginMessage" style="color: red; margin-top: 10px;"></p>
+
+            <div id="adminControls" style="display: none; margin-top: 20px;">
+                <h3 data-key="adminSettingsTitle">Pengaturan Batas Cycle Time</h3>
+                
+                <div class="setting-group">
+                    <label for="newLowerLimit">Lower Limit (saat ini: <span id="currentLower"></span>s)</label>
+                    <input type="number" id="newLowerLimit" min="1" step="0.01">
+                </div>
+                
+                <div class="setting-group">
+                    <label for="newUpperLimit">Upper Limit (saat ini: <span id="currentUpper"></span>s)</label>
+                    <input type="number" id="newUpperLimit" min="1" step="0.01">
+                </div>
+                
+                <button id="saveLimitsBtn" class="save-btn">Simpan Batas</button>
+                <p id="limitMessage" style="color: green; margin-top: 10px;"></p>
+
+                <h3 data-key="adminResetTitle" style="margin-top: 30px;">Reset Data Produksi</h3>
+                <button id="resetDataBtn" class="reset-btn">⚠️ Reset SEMUA Data</button>
+                <p style="font-size: 0.9em; color: yellow;">*Peringatan: Aksi ini tidak dapat dibatalkan.</p>
+                <p id="resetMessage" style="color: green; margin-top: 10px;"></p>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
