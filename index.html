@@ -660,7 +660,7 @@
             mainTitle: 'Dashboard Real Time Monitoring',
             subTitle: 'Monitoring Real-time Production',
             reloadButton: '⟳ Muat Ulang Data',
-            refreshStatus: 'Auto Refresh (2 detik)', 
+            refreshStatus: 'Auto Refresh (10 detik)', 
             statAvgCycle: 'CT RATA-RATA',
             statTotalCycles: 'TOTAL CYCLE',
             statLastCycle: 'CT TERAKHIR',
@@ -710,7 +710,7 @@
             mainTitle: 'Real Time Monitoring Dashboard',
             subTitle: 'Real-time Production Monitoring',
             reloadButton: '⟳ Reload Data',
-            refreshStatus: 'Auto Refresh (2 seconds)', 
+            refreshStatus: 'Auto Refresh (10 seconds)', 
             statAvgCycle: 'AVERAGE CT',
             statTotalCycles: 'TOTAL CYCLES',
             statLastCycle: 'LAST CT',
@@ -925,7 +925,7 @@
         document.getElementById('exportCsvBtn').addEventListener('click', exportCurrentToCSV);
         
         // Timer auto refresh
-        autoRefreshInterval = setInterval(loadDataFromSheets, 2000); // 2000ms = 2 detik
+        autoRefreshInterval = setInterval(loadDataFromSheets, 10000); // 10000ms = 10 detik
 
         // === LISTENER KONTROL ADMIN BARU ===
         const adminModal = document.getElementById('adminModal');
@@ -1073,7 +1073,7 @@
                         data: [],
                         borderColor: 'red',
                         borderDash: [5, 5],
-                        borderWidth: 2,
+                        borderWidth: 1,
                         pointRadius: 0,
                         fill: false
                     },
@@ -1082,7 +1082,7 @@
                         data: [],
                         borderColor: 'red',
                         borderDash: [5, 5],
-                        borderWidth: 2,
+                        borderWidth: 1,
                         pointRadius: 0,
                         fill: false
                     }
@@ -1144,7 +1144,7 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { color: '#a0d2eb', font: { size: 14 } }
+                        labels: { color: '#a0d2eb', font: { size: 10 } }
                     },
                     tooltip: {
                         callbacks: {
