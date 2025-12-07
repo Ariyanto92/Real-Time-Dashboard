@@ -144,7 +144,7 @@ function updateTextContent(lang) {
     document.querySelector('.description').textContent = translations[lang].subTitle;
 
     // Update Button Toggle
-    document.getElementById('languageToggle').textContent = lang === 'id' ? 'English' : 'Indonesia';
+    document.getElementById('languageToggle').textContent = lang === 'id' ? '🌐EN' : '🌐ID';
     
     // Update Moment.js locale
     moment.locale(lang);
