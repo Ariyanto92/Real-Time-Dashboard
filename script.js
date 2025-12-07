@@ -126,28 +126,37 @@ function updateTextContent(lang) {
     });
     
     // Handle select options for rowsPerPage
-    document.getElementById('rowsPerPage').querySelectorAll('option').forEach(opt => {
-        const val = opt.value;
-        opt.textContent = val + translations[lang].rowsPerPage;
-    });
+    const rowsPerPageEl = document.getElementById('rowsPerPage');
+    if (rowsPerPageEl) {
+        rowsPerPageEl.querySelectorAll('option').forEach(opt => {
+            const val = opt.value;
+            opt.textContent = val + translations[lang].rowsPerPage;
+        });
+    }
 
     // Handle select options for datePreset
-    document.getElementById('datePreset').querySelectorAll('option').forEach(opt => {
-        const key = 'filter' + opt.value.charAt(0).toUpperCase() + opt.value.slice(1).replace('current', '');
-        if (translations[lang][key]) {
-            opt.textContent = translations[lang][key];
-        }
-    });
+    const datePresetEl = document.getElementById('datePreset');
+    if (datePresetEl) {
+        datePresetEl.querySelectorAll('option').forEach(opt => {
+            const key = 'filter' + opt.value.charAt(0).toUpperCase() + opt.value.slice(1).replace('current', '');
+            if (translations[lang][key]) {
+                opt.textContent = translations[lang][key];
+            }
+        });
+    }
 
     // Update Header Text Manually
-    document.querySelector('h1').textContent = translations[lang].mainTitle;
-    document.querySelector('.description').textContent = translations[lang].subTitle;
+    const h1 = document.querySelector('h1');
+    if (h1) h1.textContent = translations[lang].mainTitle;
+    const desc = document.querySelector('.description');
+    if (desc) desc.textContent = translations[lang].subTitle;
 
     // Update Button Toggle
-    document.getElementById('languageToggle').textContent = lang === 'id' ? '🌐EN' : '🌐ID';
+    const langToggle = document.getElementById('languageToggle');
+    if (langToggle) langToggle.textContent = lang === 'id' ? '🌐 EN' : '🌐 ID';
     
     // Update Moment.js locale
-    moment.locale(lang);
+    if (typeof moment !== 'undefined') moment.locale(lang);
 
     // Update Chart Labels 
     if (cycleTimeChart) {
@@ -185,12 +194,19 @@ const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = '123';   
 let isLoggedIn = false;
 
+// ===== MACHINE & PART (NEW) =====
+let MACHINE_NAME = localStorage.getItem("machineName") || "-";
+let PART_NAME = localStorage.getItem("partName") || "-";
+let PART_NUMBER = localStorage.getItem("partNumber") || "-";
+
 let cycleTimeChart;
 let statusChart;
 let autoRefreshInterval;
 
+let filteredTableRows = [];
 let tableHeaders = [];
-let tableRowsAll = []; 
+let tableRowsAll = [];
+
 let currentPage = 1;
 let rowsPerPage = 10;
 let currentSortIndex = null;
@@ -204,75 +220,92 @@ document.addEventListener('DOMContentLoaded', function() {
     updateTextContent(currentLanguage);
     
     // Event listener untuk tombol toggle bahasa
-    document.getElementById('languageToggle').addEventListener('click', () => {
-        currentLanguage = currentLanguage === 'id' ? 'en' : 'id';
-        localStorage.setItem('lang', currentLanguage);
-        updateTextContent(currentLanguage);
-        if (tableRowsAll.length > 0) {
-             const lowerCount = tableRowsAll.filter(r => (parseFloat(r[2]) || 0) < LOWER_LIMIT).length;
-             const normalCount = tableRowsAll.filter(r => (parseFloat(r[2]) || 0) >= LOWER_LIMIT && (parseFloat(r[2]) || 0) <= UPPER_LIMIT).length;
-             const overCount = tableRowsAll.filter(r => (parseFloat(r[2]) || 0) > UPPER_LIMIT).length;
-             updateCharts([], lowerCount, normalCount, overCount);
-        }
-    });
+    const langToggleBtn = document.getElementById('languageToggle');
+    if (langToggleBtn) {
+        langToggleBtn.addEventListener('click', () => {
+            currentLanguage = currentLanguage === 'id' ? 'en' : 'id';
+            localStorage.setItem('lang', currentLanguage);
+            updateTextContent(currentLanguage);
+            if (tableRowsAll.length > 0) {
+                 const lowerCount = tableRowsAll.filter(r => (parseFloat(r[2]) || 0) < LOWER_LIMIT).length;
+                 const normalCount = tableRowsAll.filter(r => (parseFloat(r[2]) || 0) >= LOWER_LIMIT && (parseFloat(r[2]) || 0) <= UPPER_LIMIT).length;
+                 const overCount = tableRowsAll.filter(r => (parseFloat(r[2]) || 0) > UPPER_LIMIT).length;
+                 updateCharts([], lowerCount, normalCount, overCount);
+            }
+        });
+    }
 
-    moment.locale(currentLanguage);
+    if (typeof moment !== 'undefined') moment.locale(currentLanguage);
     initCharts();
     
     setFilterRange('all');
     loadDataFromSheets(); 
     
-    document.getElementById('loadData').addEventListener('click', loadDataFromSheets);
+    const loadDataBtn = document.getElementById('loadData');
+    if (loadDataBtn) loadDataBtn.addEventListener('click', loadDataFromSheets);
 
     // === LISTENER KONTROL FILTER ===
-    document.getElementById('datePreset').addEventListener('change', function(e) {
-        const preset = e.target.value;
-        const customControls = document.getElementById('customRangeControls');
-        
-        if (preset === 'custom') {
-            customControls.style.display = 'flex';
-            filterStartDate = null;
-            filterEndDate = null;
-        } else {
-            customControls.style.display = 'none';
-            setFilterRange(preset);
+    const datePresetEl = document.getElementById('datePreset');
+    if (datePresetEl) {
+        datePresetEl.addEventListener('change', function(e) {
+            const preset = e.target.value;
+            const customControls = document.getElementById('customRangeControls');
             
-            if (tableRowsAll.length > 0) {
-                processData(tableRowsAll); 
+            if (preset === 'custom') {
+                if (customControls) customControls.style.display = 'flex';
+                filterStartDate = null;
+                filterEndDate = null;
             } else {
-                loadDataFromSheets();
+                if (customControls) customControls.style.display = 'none';
+                setFilterRange(preset);
+                
+                if (tableRowsAll.length > 0) {
+                    processData(tableRowsAll); 
+                } else {
+                    loadDataFromSheets();
+                }
             }
-        }
-    });
+        });
+    }
 
-    document.getElementById('applyFilterBtn').addEventListener('click', () => {
-        const start = document.getElementById('startDate').value;
-        const end = document.getElementById('endDate').value;
-        
-        if (start && end) {
-            setFilterRange('custom', start, end);
+    const applyFilterBtn = document.getElementById('applyFilterBtn');
+    if (applyFilterBtn) {
+        applyFilterBtn.addEventListener('click', () => {
+            const start = (document.getElementById('startDate') || {}).value;
+            const end = (document.getElementById('endDate') || {}).value;
             
-            if (tableRowsAll.length > 0) {
-                processData(tableRowsAll);
+            if (start && end) {
+                setFilterRange('custom', start, end);
+                
+                if (tableRowsAll.length > 0) {
+                    processData(tableRowsAll);
+                } else {
+                    loadDataFromSheets();
+                }
             } else {
-                loadDataFromSheets();
+                alert(currentLanguage === 'id' ? "Mohon masukkan Tanggal Mulai dan Tanggal Akhir." : "Please enter both Start Date and End Date.");
             }
-        } else {
-            alert(currentLanguage === 'id' ? "Mohon masukkan Tanggal Mulai dan Tanggal Akhir." : "Please enter both Start Date and End Date.");
-        }
-    });
+        });
+    }
 
     // === LISTENER KONTROL TABEL ===
-    document.getElementById('searchInput').addEventListener('input', () => {
-        currentPage = 1;
-        renderTable();
-    });
-    document.getElementById('rowsPerPage').addEventListener('change', (e) => {
-        rowsPerPage = parseInt(e.target.value, 10);
-        currentPage = 1;
-        renderTable();
-    });
-    document.getElementById('exportCsvBtn').addEventListener('click', exportCurrentToCSV);
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            currentPage = 1;
+            renderTable();
+        });
+    }
+    const rowsPerPageEl = document.getElementById('rowsPerPage');
+    if (rowsPerPageEl) {
+        rowsPerPageEl.addEventListener('change', (e) => {
+            rowsPerPage = parseInt(e.target.value, 10);
+            currentPage = 1;
+            renderTable();
+        });
+    }
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    if (exportCsvBtn) exportCsvBtn.addEventListener('click', exportCurrentToCSV);
     
     // Timer auto refresh
     autoRefreshInterval = setInterval(loadDataFromSheets, 10000); // 10000ms = 10 detik
@@ -280,97 +313,131 @@ document.addEventListener('DOMContentLoaded', function() {
     // === LISTENER KONTROL ADMIN BARU ===
     const adminModal = document.getElementById('adminModal');
     const adminToggle = document.getElementById('adminLoginToggle');
-    const closeBtn = adminModal.querySelector('.close-button');
+    const closeBtn = adminModal ? adminModal.querySelector('.close-button') : null;
     const loginBtn = document.getElementById('loginAdminBtn');
     const resetBtn = document.getElementById('resetDataBtn');
     const saveLimitsBtn = document.getElementById('saveLimitsBtn');
     const resetLimitsBtn = document.getElementById('resetLimitsBtn');
 
     // Buka Modal Admin
-    adminToggle.onclick = function() {
-        // Perbarui nilai batas yang tampil (ambil dari localStorage atau variable)
-        const savedLower = localStorage.getItem('lowerLimit') || LOWER_LIMIT;
-        const savedUpper = localStorage.getItem('upperLimit') || UPPER_LIMIT;
-        
-        document.getElementById('currentLower').textContent = parseFloat(savedLower).toFixed(2);
-        document.getElementById('currentUpper').textContent = parseFloat(savedUpper).toFixed(2);
-        document.getElementById('newLowerLimit').value = savedLower;
-        document.getElementById('newUpperLimit').value = savedUpper;
+    if (adminToggle && adminModal) {
+        adminToggle.onclick = function() {
+            // Perbarui nilai batas yang tampil (ambil dari localStorage atau variable)
+            const savedLower = localStorage.getItem('lowerLimit') || LOWER_LIMIT;
+            const savedUpper = localStorage.getItem('upperLimit') || UPPER_LIMIT;
+            
+            const currentLowerEl = document.getElementById('currentLower');
+            const currentUpperEl = document.getElementById('currentUpper');
+            const newLowerEl = document.getElementById('newLowerLimit');
+            const newUpperEl = document.getElementById('newUpperLimit');
 
-        // Tampilkan/Sembunyikan menu berdasarkan status login
-        document.getElementById('adminControls').style.display = isLoggedIn ? 'block' : 'none';
-        loginBtn.style.display = isLoggedIn ? 'none' : 'block';
-        adminModal.style.display = 'block';
+            if (currentLowerEl) currentLowerEl.textContent = parseFloat(savedLower).toFixed(2);
+            if (currentUpperEl) currentUpperEl.textContent = parseFloat(savedUpper).toFixed(2);
+            if (newLowerEl) newLowerEl.value = savedLower;
+            if (newUpperEl) newUpperEl.value = savedUpper;
+
+            // Tampilkan/Sembunyikan menu berdasarkan status login
+            const adminControlsEl = document.getElementById('adminControls');
+            if (adminControlsEl) adminControlsEl.style.display = isLoggedIn ? 'block' : 'none';
+            if (loginBtn) loginBtn.style.display = isLoggedIn ? 'none' : 'block';
+            adminModal.style.display = 'block';
+
+            // === Sync machine/part fields into modal if present ===
+            const adminMachine = document.getElementById('adminMachine');
+            const adminPartName = document.getElementById('adminPartName');
+            const adminPartNumber = document.getElementById('adminPartNumber');
+
+            if (adminMachine) adminMachine.value = localStorage.getItem('machineName') || MACHINE_NAME || '-';
+            if (adminPartName) adminPartName.value = localStorage.getItem('partName') || PART_NAME || '-';
+            if (adminPartNumber) adminPartNumber.value = localStorage.getItem('partNumber') || PART_NUMBER || '-';
+        };
     }
 
     // Tutup Modal
-    closeBtn.onclick = function() {
-        adminModal.style.display = 'none';
+    if (closeBtn) {
+        closeBtn.onclick = function() {
+            adminModal.style.display = 'none';
+        };
     }
     window.onclick = function(event) {
-        if (event.target == adminModal) {
+        if (adminModal && event.target == adminModal) {
             adminModal.style.display = 'none';
         }
     }
     
     // --- Otentikasi Login ---
-    loginBtn.onclick = function() {
-        const user = document.getElementById('adminUsername').value;
-        const pass = document.getElementById('adminPassword').value;
-        const msg = document.getElementById('loginMessage');
+    if (loginBtn) {
+        loginBtn.onclick = function() {
+            const user = (document.getElementById('adminUsername') || {}).value;
+            const pass = (document.getElementById('adminPassword') || {}).value;
+            const msg = document.getElementById('loginMessage');
 
-        if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
-            isLoggedIn = true;
-            msg.textContent = currentLanguage === 'id' ? "Login Berhasil!" : "Login Successful!";
-            msg.style.color = 'green';
-            
-            document.getElementById('adminControls').style.display = 'block';
-            loginBtn.style.display = 'none';
-        } else {
-            msg.textContent = currentLanguage === 'id' ? "Username atau password salah." : "Incorrect username or password.";
-            msg.style.color = 'red';
-            isLoggedIn = false;
-        }
+            if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+                isLoggedIn = true;
+                if (msg) {
+                    msg.textContent = currentLanguage === 'id' ? "Login Berhasil!" : "Login Successful!";
+                    msg.style.color = 'green';
+                }
+                
+                const adminControlsEl = document.getElementById('adminControls');
+                if (adminControlsEl) adminControlsEl.style.display = 'block';
+                loginBtn.style.display = 'none';
+            } else {
+                if (msg) {
+                    msg.textContent = currentLanguage === 'id' ? "Username atau password salah." : "Incorrect username or password.";
+                    msg.style.color = 'red';
+                }
+                isLoggedIn = false;
+            }
+        };
     }
 
     // --- Simpan Batas Limit (DISIMPAN KE LOCALSTORAGE) ---
-    saveLimitsBtn.onclick = function() {
-        if (!isLoggedIn) return;
-        const newLower = parseFloat(document.getElementById('newLowerLimit').value);
-        const newUpper = parseFloat(document.getElementById('newUpperLimit').value);
-        const limitMsg = document.getElementById('limitMessage');
+    if (saveLimitsBtn) {
+        saveLimitsBtn.onclick = function() {
+            if (!isLoggedIn) return;
+            const newLower = parseFloat(document.getElementById('newLowerLimit').value);
+            const newUpper = parseFloat(document.getElementById('newUpperLimit').value);
+            const limitMsg = document.getElementById('limitMessage');
 
-        if (isNaN(newLower) || isNaN(newUpper) || newLower <= 0 || newUpper <= newLower) {
-            limitMsg.textContent = currentLanguage === 'id' ? "Batas tidak valid. Pastikan Upper > Lower." : "Invalid limits. Ensure Upper > Lower.";
-            limitMsg.style.color = 'red';
-            return;
-        }
-
-        // SIMPAN KE LOCALSTORAGE
-        localStorage.setItem('lowerLimit', newLower);
-        localStorage.setItem('upperLimit', newUpper);
-        
-        // Update variabel global
-        LOWER_LIMIT = newLower;
-        UPPER_LIMIT = newUpper;
-        
-        // Update UI
-        document.getElementById('currentLower').textContent = newLower.toFixed(2);
-        document.getElementById('currentUpper').textContent = newUpper.toFixed(2);
-        
-        limitMsg.textContent = currentLanguage === 'id' ? translations[currentLanguage].saveSuccess : translations['en'].saveSuccess;
-        limitMsg.style.color = 'green';
-        
-        // Perbarui chart dengan limit baru
-        if (cycleTimeChart) {
-            updateTextContent(currentLanguage);
-            // Refresh data untuk update status berdasarkan limit baru
-            if (tableRowsAll.length > 0) {
-                processData(tableRowsAll);
+            if (isNaN(newLower) || isNaN(newUpper) || newLower <= 0 || newUpper <= newLower) {
+                if (limitMsg) {
+                    limitMsg.textContent = currentLanguage === 'id' ? "Batas tidak valid. Pastikan Upper > Lower." : "Invalid limits. Ensure Upper > Lower.";
+                    limitMsg.style.color = 'red';
+                }
+                return;
             }
-        }
-        
-        setTimeout(() => { limitMsg.textContent = ''; }, 3000);
+
+            // SIMPAN KE LOCALSTORAGE
+            localStorage.setItem('lowerLimit', newLower);
+            localStorage.setItem('upperLimit', newUpper);
+            
+            // Update variabel global
+            LOWER_LIMIT = newLower;
+            UPPER_LIMIT = newUpper;
+            
+            // Update UI
+            const currentLowerEl = document.getElementById('currentLower');
+            const currentUpperEl = document.getElementById('currentUpper');
+            if (currentLowerEl) currentLowerEl.textContent = newLower.toFixed(2);
+            if (currentUpperEl) currentUpperEl.textContent = newUpper.toFixed(2);
+            
+            if (limitMsg) {
+                limitMsg.textContent = currentLanguage === 'id' ? translations[currentLanguage].saveSuccess : translations['en'].saveSuccess;
+                limitMsg.style.color = 'green';
+            }
+            
+            // Perbarui chart dengan limit baru
+            if (cycleTimeChart) {
+                updateTextContent(currentLanguage);
+                // Refresh data untuk update status berdasarkan limit baru
+                if (tableRowsAll.length > 0) {
+                    processData(tableRowsAll);
+                }
+            }
+            
+            setTimeout(() => { if (limitMsg) limitMsg.textContent = ''; }, 3000);
+        };
     }
     
     // --- Reset Limits ke Default ---
@@ -395,14 +462,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 UPPER_LIMIT = defaultUpper;
                 
                 // Update UI di modal
-                document.getElementById('currentLower').textContent = defaultLower.toFixed(2);
-                document.getElementById('currentUpper').textContent = defaultUpper.toFixed(2);
-                document.getElementById('newLowerLimit').value = defaultLower;
-                document.getElementById('newUpperLimit').value = defaultUpper;
+                const currentLowerEl = document.getElementById('currentLower');
+                const currentUpperEl = document.getElementById('currentUpper');
+                const newLowerEl = document.getElementById('newLowerLimit');
+                const newUpperEl = document.getElementById('newUpperLimit');
+
+                if (currentLowerEl) currentLowerEl.textContent = defaultLower.toFixed(2);
+                if (currentUpperEl) currentUpperEl.textContent = defaultUpper.toFixed(2);
+                if (newLowerEl) newLowerEl.value = defaultLower;
+                if (newUpperEl) newUpperEl.value = defaultUpper;
                 
                 const limitMsg = document.getElementById('limitMessage');
-                limitMsg.textContent = currentLanguage === 'id' ? translations[currentLanguage].resetSuccess : translations['en'].resetSuccess;
-                limitMsg.style.color = 'green';
+                if (limitMsg) {
+                    limitMsg.textContent = currentLanguage === 'id' ? translations[currentLanguage].resetSuccess : translations['en'].resetSuccess;
+                    limitMsg.style.color = 'green';
+                }
                 
                 // Update chart dengan limit default
                 if (cycleTimeChart) {
@@ -413,24 +487,41 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                setTimeout(() => { limitMsg.textContent = ''; }, 3000);
+                setTimeout(() => { if (limitMsg) limitMsg.textContent = ''; }, 3000);
             }
         };
     }
 
     // --- Reset Data ---
-    resetBtn.onclick = function() {
-        if (!isLoggedIn) return;
+    if (resetBtn) {
+        resetBtn.onclick = function() {
+            if (!isLoggedIn) return;
 
-        const confirmation = confirm(currentLanguage === 'id' ? "ANDA YAKIN INGIN MERESET SEMUA DATA PRODUKSI? Aksi ini tidak dapat dibatalkan." : "ARE YOU SURE YOU WANT TO RESET ALL PRODUCTION DATA? This action cannot be undone.");
-        
-        if (confirmation) {
-            resetAllData();
-            document.getElementById('resetMessage').textContent = currentLanguage === 'id' ? "Permintaan Reset Data berhasil dikirim (Simulasi: Perlu API tulis)." : "Data Reset request sent (Simulation: Write API needed).";
-            document.getElementById('resetMessage').style.color = 'green';
-            setTimeout(() => { document.getElementById('resetMessage').textContent = ''; }, 5000);
-        }
+            const confirmation = confirm(currentLanguage === 'id' ? "ANDA YAKIN INGIN MERESET SEMUA DATA PRODUKSI? Aksi ini tidak dapat dibatalkan." : "ARE YOU SURE YOU WANT TO RESET ALL PRODUCTION DATA? This action cannot be undone.");
+            
+            if (confirmation) {
+                resetAllData();
+                const resetMsg = document.getElementById('resetMessage');
+                if (resetMsg) {
+                    resetMsg.textContent = currentLanguage === 'id' ? "Permintaan Reset Data berhasil dikirim (Simulasi: Perlu API tulis)." : "Data Reset request sent (Simulation: Write API needed).";
+                    resetMsg.style.color = 'green';
+                    setTimeout(() => { resetMsg.textContent = ''; }, 5000);
+                }
+            }
+        };
     }
+
+    // === MACHINE/PART ADMIN SAVE BUTTON BIND ===
+    const saveMachinePartBtn = document.getElementById('saveMachinePartBtn');
+    if (saveMachinePartBtn) {
+        saveMachinePartBtn.addEventListener('click', function() {
+            saveMachinePart();
+        });
+    }
+
+    // === LOAD MACHINE/PART KE DASHBOARD ===
+    loadMachinePart();
+
 });
 
 // ===== FUNGSI SET FILTER RANGE =====
@@ -442,20 +533,34 @@ function setFilterRange(preset, start = null, end = null) {
     if (preset === 'today') {
         filterStartDate = moment(now);
         filterEndDate = moment(now).endOf('day');
+
     } else if (preset === 'yesterday') {
         filterStartDate = moment(now).subtract(1, 'days').startOf('day');
         filterEndDate = moment(now).subtract(1, 'days').endOf('day');
-    } else if (preset === 'currentWeek') {
+
+    } 
+    // ✅ SUPPORT KEDUA FORMAT VALUE
+    else if (preset === 'week' || preset === 'currentWeek') {
         filterStartDate = moment(now).startOf('week');
         filterEndDate = moment(now).endOf('day');
-    } else if (preset === 'currentMonth') {
+
+    } 
+    else if (preset === 'month' || preset === 'currentMonth') {
         filterStartDate = moment(now).startOf('month');
         filterEndDate = moment(now).endOf('day');
-    } else if (preset === 'custom' && start && end) {
+
+    } 
+    else if (preset === 'custom' && start && end) {
         filterStartDate = moment(start).startOf('day');
         filterEndDate = moment(end).endOf('day');
     } 
+    // ✅ PENTING UNTUK "SEMUA DATA"
+    else if (preset === 'all') {
+        filterStartDate = null;
+        filterEndDate = null;
+    }
 }
+
 
 // ===== FUNGSI INIT CHART =====
 function initCharts() {
@@ -585,7 +690,8 @@ async function loadDataFromSheets() {
         
         processData(data.values);
         
-        document.getElementById('lastUpdated').textContent = `${translations[currentLanguage].lastUpdatedPrefix} ${moment().format('LLLL')}`;
+        const lastUpdatedEl = document.getElementById('lastUpdated');
+        if (lastUpdatedEl) lastUpdatedEl.textContent = `${translations[currentLanguage].lastUpdatedPrefix} ${moment().format('LLLL')}`;
         
     } catch (error) {
         console.error('Error:', error);
@@ -610,18 +716,18 @@ function processData(data) {
     const rawRows = tableRowsAll; 
 
     // 1. TAHAP FILTER BERDASARKAN RANGE TANGGAL
-    let filteredRows;
+   if (filterStartDate && filterEndDate) {
+    filteredTableRows = rawRows.filter(row => {
+        const rowMoment = moment(row[0]);
+        return rowMoment.isValid() &&
+               rowMoment.isSameOrAfter(filterStartDate) &&
+               rowMoment.isSameOrBefore(filterEndDate);
+    });
+} else {
+    filteredTableRows = [...rawRows];
+}
 
-    if (filterStartDate && filterEndDate) {
-        filteredRows = rawRows.filter(row => {
-            const rowMoment = moment(row[0]);
-            return rowMoment.isSameOrAfter(filterStartDate) && rowMoment.isSameOrBefore(filterEndDate);
-        });
-    } else {
-        filteredRows = rawRows;
-    }
-
-    const rows = filteredRows;
+    const rows = filteredTableRows;
     
     currentPage = 1;
     renderTable();
@@ -663,21 +769,29 @@ function processData(data) {
     });
 
     const avgCycleTime = totalCycles > 0 ? totalCycleTime / totalCycles : 0;
-    document.getElementById('avgCycleTime').textContent = isNaN(avgCycleTime) ? '0.00s' : avgCycleTime.toFixed(2) + 's';
-    document.getElementById('totalCycles').textContent = totalCycles;
-    document.getElementById('minCycleTime').textContent = isFinite(minCycleTime) ? minCycleTime.toFixed(2) + 's' : '0.00s';
-    document.querySelector('[data-key="statMaxCycle"]').textContent = `${translations[currentLanguage].statMaxCycle} ${isFinite(maxCycleTime) ? maxCycleTime.toFixed(2) + 's' : '0.00s'}`;
-    document.querySelector('[data-key="statToday"]').textContent = `${translations[currentLanguage].statToday} ${todayCycles}`;
+    const avgEl = document.getElementById('avgCycleTime');
+    if (avgEl) avgEl.textContent = isNaN(avgCycleTime) ? '0.00s' : avgCycleTime.toFixed(2) + 's';
+    const totalCyclesEl = document.getElementById('totalCycles');
+    if (totalCyclesEl) totalCyclesEl.textContent = totalCycles;
+    const minEl = document.getElementById('minCycleTime');
+    if (minEl) minEl.textContent = isFinite(minCycleTime) ? minCycleTime.toFixed(2) + 's' : '0.00s';
+    const statMaxEl = document.querySelector('[data-key="statMaxCycle"]');
+    if (statMaxEl) statMaxEl.textContent = `${translations[currentLanguage].statMaxCycle} ${isFinite(maxCycleTime) ? maxCycleTime.toFixed(2) + 's' : '0.00s'}`;
+    const statTodayEl = document.querySelector('[data-key="statToday"]');
+    if (statTodayEl) statTodayEl.textContent = `${translations[currentLanguage].statToday} ${todayCycles}`;
 
-    document.getElementById('lastCycleTime').textContent = lastCycleTime.toFixed(2) + 's';
+    const lastCycleTimeEl = document.getElementById('lastCycleTime');
+    if (lastCycleTimeEl) lastCycleTimeEl.textContent = lastCycleTime.toFixed(2) + 's';
     
     const statusElement = document.getElementById('lastCycleStatus');
-    const displayStatus = translations[currentLanguage]['status' + lastCycleStatus.charAt(0).toUpperCase() + lastCycleStatus.slice(1).toLowerCase()];
+    const displayStatus = translations[currentLanguage]['status' + (lastCycleStatus ? lastCycleStatus.charAt(0).toUpperCase() + lastCycleStatus.slice(1).toLowerCase() : 'Normal')];
 
-    statusElement.textContent = `${translations[currentLanguage].statStatusPrefix} ${displayStatus}`;
-    if (lastCycleStatus === 'NORMAL') statusElement.style.color = '#2ecc71';
-    else if (lastCycleStatus === 'LOWER') statusElement.style.color = '#ffa500';
-    else statusElement.style.color = '#e74c3c';
+    if (statusElement) {
+        statusElement.textContent = `${translations[currentLanguage].statStatusPrefix} ${displayStatus}`;
+        if (lastCycleStatus === 'NORMAL') statusElement.style.color = '#2ecc71';
+        else if (lastCycleStatus === 'LOWER') statusElement.style.color = '#ffa500';
+        else statusElement.style.color = '#e74c3c';
+    }
     
     updateCharts(chartData, lowerCount, normalCount, overCount);
 }
@@ -688,32 +802,36 @@ function updateCharts(chartData, lowerCount, normalCount, overCount) {
     const total = lowerCount + normalCount + overCount;
 
     const recentChartData = chartData.slice(-50);
-    cycleTimeChart.data.labels = recentChartData.map((_, index) => `${translations[lang].cycleLabel} ${index + 1}`);
-    cycleTimeChart.data.datasets[0].data = recentChartData.map(item => item.value);
-    
-    // Memastikan label limit di update sesuai nilai baru
-    cycleTimeChart.data.datasets[1].label = translations[lang].limitLower + ` (${LOWER_LIMIT.toFixed(2)}s)`;
-    cycleTimeChart.data.datasets[2].label = translations[lang].limitUpper + ` (${UPPER_LIMIT.toFixed(2)}s)`;
+    if (cycleTimeChart) {
+        cycleTimeChart.data.labels = recentChartData.map((_, index) => `${translations[lang].cycleLabel} ${index + 1}`);
+        cycleTimeChart.data.datasets[0].data = recentChartData.map(item => item.value);
+        
+        // Memastikan label limit di update sesuai nilai baru
+        if (cycleTimeChart.data.datasets[1]) cycleTimeChart.data.datasets[1].label = translations[lang].limitLower + ` (${LOWER_LIMIT.toFixed(2)}s)`;
+        if (cycleTimeChart.data.datasets[2]) cycleTimeChart.data.datasets[2].label = translations[lang].limitUpper + ` (${UPPER_LIMIT.toFixed(2)}s)`;
 
-    cycleTimeChart.data.datasets[1].data = Array(recentChartData.length).fill(LOWER_LIMIT);
-    cycleTimeChart.data.datasets[2].data = Array(recentChartData.length).fill(UPPER_LIMIT);
-    cycleTimeChart.update();
+        cycleTimeChart.data.datasets[1].data = Array(recentChartData.length).fill(LOWER_LIMIT);
+        cycleTimeChart.data.datasets[2].data = Array(recentChartData.length).fill(UPPER_LIMIT);
+        cycleTimeChart.update();
+    }
     
-    statusChart.data.datasets[0].data = [lowerCount, normalCount, overCount];
-    
-    const labels = [
-        translations[lang].statusLower,
-        translations[lang].statusNormal,
-        translations[lang].statusOver
-    ];
+    if (statusChart) {
+        statusChart.data.datasets[0].data = [lowerCount, normalCount, overCount];
+        
+        const labels = [
+            translations[lang].statusLower,
+            translations[lang].statusNormal,
+            translations[lang].statusOver
+        ];
 
-    statusChart.data.labels = [
-        `${labels[0]}: ${lowerCount} (${total > 0 ? ((lowerCount / total) * 100).toFixed(1) : 0}%)`,
-        `${labels[1]}: ${normalCount} (${total > 0 ? ((normalCount / total) * 100).toFixed(1) : 0}%)`,
-        `${labels[2]}: ${overCount} (${total > 0 ? ((overCount / total) * 100).toFixed(1) : 0}%)`
-    ];
-    
-    statusChart.update();
+        statusChart.data.labels = [
+            `${labels[0]}: ${lowerCount} (${total > 0 ? ((lowerCount / total) * 100).toFixed(1) : 0}%)`,
+            `${labels[1]}: ${normalCount} (${total > 0 ? ((normalCount / total) * 100).toFixed(1) : 0}%)`,
+            `${labels[2]}: ${overCount} (${total > 0 ? ((overCount / total) * 100).toFixed(1) : 0}%)`
+        ];
+        
+        statusChart.update();
+    }
 }
 
 // ===== FUNGSI STATUS DARI CYCLE =====
@@ -725,30 +843,34 @@ function statusFromCycle(cycleTime) {
 
 // ===== FUNGSI RENDER TABLE =====
 function renderTable(resetSort = true) {
-    const rowsToRender = (filterStartDate || filterEndDate) 
-                        ? tableRowsAll.filter(row => moment(row[0]).isSameOrAfter(filterStartDate) && moment(row[0]).isSameOrBefore(filterEndDate))
-                        : tableRowsAll;
+
+    const rowsToRender = filteredTableRows.length 
+        ? filteredTableRows 
+        : tableRowsAll;
 
     if (!rowsToRender.length) {
-        document.getElementById('tableContainer').innerHTML = `<div class="loading">${currentLanguage === 'id' ? 'Tidak ada data ditemukan dalam periode ini.' : 'No data found in this period.'}</div>`;
-        document.getElementById('pagination').innerHTML = '';
+        const tableContainer = document.getElementById('tableContainer');
+        if (tableContainer) tableContainer.innerHTML = `<div class="loading">${currentLanguage === 'id' ? 'Tidak ada data ditemukan dalam periode ini.' : 'No data found in this period.'}</div>`;
+        const pagination = document.getElementById('pagination');
+        if (pagination) pagination.innerHTML = '';
         return;
     }
 
-    const search = (document.getElementById('searchInput').value || '').toLowerCase();
+    const search = (document.getElementById('searchInput') || {}).value?.toLowerCase() || '';
+
     let filtered = rowsToRender.filter(r => {
         const status = statusFromCycle(parseFloat(r[2]) || 0);
         const displayStatus = translations[currentLanguage]['status' + status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()];
 
-        return r[0].toLowerCase().includes(search) || 
-               r[2].toLowerCase().includes(search) ||
-               displayStatus.toLowerCase().includes(search);
+        return (r[0] || '').toLowerCase().includes(search) || 
+               (r[2] || '').toLowerCase().includes(search) ||
+               (displayStatus || '').toLowerCase().includes(search);
     });
 
     if (currentSortIndex !== null && filtered.length > 0) {
         const columnIndex = currentSortIndex;
         const direction = sortDirection === 'asc' ? 1 : -1;
-        
+
         filtered.sort((a, b) => {
             let valA = a[columnIndex];
             let valB = b[columnIndex];
@@ -756,20 +878,14 @@ function renderTable(resetSort = true) {
             if (columnIndex === 0) {
                 return direction * (moment(valA).valueOf() - moment(valB).valueOf());
             } else if (columnIndex === 2) {
-                valA = parseFloat(valA) || 0;
-                valB = parseFloat(valB) || 0;
-                return direction * (valA - valB);
+                return direction * ((parseFloat(valA) || 0) - (parseFloat(valB) || 0));
             } else {
-                if (valA < valB) return direction * -1;
-                if (valA > valB) return direction * 1;
-                return 0;
+                return direction * (String(valA).localeCompare(String(valB)));
             }
         });
     }
 
-    rowsPerPage = parseInt(document.getElementById('rowsPerPage').value, 10);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
-    if (currentPage > totalPages) currentPage = totalPages;
+    rowsPerPage = parseInt((document.getElementById('rowsPerPage') || {}).value || rowsPerPage, 10);
     const start = (currentPage - 1) * rowsPerPage;
     const pageRows = filtered.slice(start, start + rowsPerPage);
 
@@ -789,48 +905,22 @@ function renderTable(resetSort = true) {
                         const cycleTime = parseFloat(row[2]) || 0;
                         const status = statusFromCycle(cycleTime);
                         const displayStatus = translations[currentLanguage]['status' + status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()];
-                        
                         return `
                             <tr>
                                 <td>${moment(row[0]).format('DD/MM/YYYY HH:mm:ss')}</td>
                                 <td>${row[1]}</td>
                                 <td>${cycleTime.toFixed(2)}s</td>
                                 <td><span class="status-badge status-${status.toLowerCase()}">${displayStatus}</span></td>
-                            </tr>
-                        `;
+                            </tr>`;
                     }).join('')}
                 </tbody>
             </table>
-        </div>
-    `;
-
-    let pagHTML = '';
-    const maxPagesToShow = 7;
-    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-
-    if (endPage - startPage + 1 < maxPagesToShow) {
-        startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-
-    if (currentPage > 1) {
-        pagHTML += `<button onclick="goToPage(1)">&laquo;</button>`;
-        pagHTML += `<button onclick="goToPage(${currentPage - 1})">&lsaquo;</button>`;
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-        const activeClass = i === currentPage ? 'active' : '';
-        pagHTML += `<button class="${activeClass}" onclick="goToPage(${i})">${i}</button>`;
-    }
-
-    if (currentPage < totalPages) {
-        pagHTML += `<button onclick="goToPage(${currentPage + 1})">&rsaquo;</button>`;
-        pagHTML += `<button onclick="goToPage(${totalPages})">&raquo;</button>`;
-    }
-
-    document.getElementById('tableContainer').innerHTML = tableHTML;
-    document.getElementById('pagination').innerHTML = pagHTML;
+        </div>`;
+    const tableContainer = document.getElementById('tableContainer');
+    if (tableContainer) tableContainer.innerHTML = tableHTML;
 }
+
+
 
 // ===== FUNGSI SORTING/PAGINATION/EXPORT =====
 function handleSort(columnIndex) {
@@ -850,22 +940,23 @@ function goToPage(p) {
 }
 
 function exportCurrentToCSV() {
-    const rowsToExport = (filterStartDate || filterEndDate) 
-                        ? tableRowsAll.filter(row => moment(row[0]).isSameOrAfter(filterStartDate) && moment(row[0]).isSameOrBefore(filterEndDate))
-                        : tableRowsAll;
+    const rowsToExport = filteredTableRows.length 
+    ? filteredTableRows 
+    : tableRowsAll;
+
     
     if (rowsToExport.length === 0) {
         alert(currentLanguage === 'id' ? "Tidak ada data untuk di-export." : "No data to export.");
         return;
     }
 
-    const search = (document.getElementById('searchInput').value || '').toLowerCase();
+    const search = (document.getElementById('searchInput') || {}).value?.toLowerCase() || '';
     let filtered = rowsToExport.filter(r => {
         const status = statusFromCycle(parseFloat(r[2]) || 0);
         const displayStatus = translations[currentLanguage]['status' + status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()];
-        return r[0].toLowerCase().includes(search) || 
-               r[2].toLowerCase().includes(search) ||
-               displayStatus.toLowerCase().includes(search);
+        return (r[0] || '').toLowerCase().includes(search) || 
+               (r[2] || '').toLowerCase().includes(search) ||
+               (displayStatus || '').toLowerCase().includes(search);
     });
 
     if (currentSortIndex !== null) {
@@ -938,4 +1029,62 @@ function resetAllData() {
     
     // Pilihan: Anda bisa memuat ulang data di sini jika API Reset dipanggil
     // loadDataFromSheets(); 
+}
+
+/* =========================
+   MACHINE & PART FUNCTIONS
+   ========================= */
+function loadMachinePart() {
+    const machineEl = document.getElementById("machineName") || document.getElementById("machineDisplay") || document.getElementById("machine");
+    const partNameEl = document.getElementById("partName") || document.getElementById("partNameDisplay") || document.getElementById("part");
+    const partNumberEl = document.getElementById("partNumber") || document.getElementById("partNumberDisplay") || document.getElementById("partNo");
+
+    MACHINE_NAME = localStorage.getItem("machineName") || MACHINE_NAME || "-";
+    PART_NAME = localStorage.getItem("partName") || PART_NAME || "-";
+    PART_NUMBER = localStorage.getItem("partNumber") || PART_NUMBER || "-";
+
+    if (machineEl) machineEl.textContent = MACHINE_NAME;
+    if (partNameEl) partNameEl.textContent = PART_NAME;
+    if (partNumberEl) partNumberEl.textContent = PART_NUMBER;
+
+    // Sync to admin inputs if present
+    const adminMachine = document.getElementById('adminMachine');
+    const adminPartName = document.getElementById('adminPartName');
+    const adminPartNumber = document.getElementById('adminPartNumber');
+
+    if (adminMachine) adminMachine.value = MACHINE_NAME === "-" ? "" : MACHINE_NAME;
+    if (adminPartName) adminPartName.value = PART_NAME === "-" ? "" : PART_NAME;
+    if (adminPartNumber) adminPartNumber.value = PART_NUMBER === "-" ? "" : PART_NUMBER;
+}
+
+function saveMachinePart() {
+    if (!isLoggedIn) {
+        alert(currentLanguage === 'id' ? "Login admin terlebih dahulu!" : "Please login as admin first!");
+        return;
+    }
+
+    const adminMachine = document.getElementById('adminMachine');
+    const adminPartName = document.getElementById('adminPartName');
+    const adminPartNumber = document.getElementById('adminPartNumber');
+
+    if (!adminMachine || !adminPartName || !adminPartNumber) {
+        alert(currentLanguage === 'id' ? "Form MACHINE/PART tidak ditemukan di modal admin." : "Machine/Part form not found in admin modal.");
+        return;
+    }
+
+    const machineVal = adminMachine.value.trim() || "-";
+    const partNameVal = adminPartName.value.trim() || "-";
+    const partNumberVal = adminPartNumber.value.trim() || "-";
+
+    localStorage.setItem('machineName', machineVal);
+    localStorage.setItem('partName', partNameVal);
+    localStorage.setItem('partNumber', partNumberVal);
+
+    MACHINE_NAME = machineVal;
+    PART_NAME = partNameVal;
+    PART_NUMBER = partNumberVal;
+
+    loadMachinePart();
+
+    alert(currentLanguage === 'id' ? "Data MACHINE & PART berhasil disimpan!" : "Machine & Part data saved!");
 }
