@@ -23,6 +23,24 @@
             <div class="lang-toggle" id="adminLoginToggle">Admin</div>
         </header>
         
+        <!-- === INFO MESIN & PART (BARU) === -->
+        <div class="machine-info">
+            <div class="info-item">
+                <span class="info-label">MACHINE</span>
+                <div class="info-value" id="machineName">-</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">PART NAME</span>
+                <div class="info-value" id="partName">-</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">PART NUMBER</span>
+                <div class="info-value" id="partNumber">-</div>
+            </div>
+        </div>
+        <!-- === END INFO MESIN & PART === -->
+      
+      
         <div class="controls">
             <div class="filter-group">
                 <label for="datePreset" data-key="filterLabel">Filter Data:</label>
@@ -121,8 +139,24 @@
             <p id="loginMessage" style="color: red; margin-top: 10px;"></p>
 
             <div id="adminControls" style="display: none; margin-top: 20px;">
-                <h3 data-key="adminSettingsTitle">Pengaturan Batas Cycle Time</h3>
+                <h3 data-key="adminSettingsTitle">Pengaturan</h3>
                 
+                    <div class="setting-group">
+                    <label>MACHINE</label>
+                    <input type="text" id="adminMachine">
+                </div>
+
+                <div class="setting-group">
+                    <label>PART NAME</label>
+                    <input type="text" id="adminPartName">
+                </div>
+
+                <div class="setting-group">
+                    <label>PART NUMBER</label>
+                    <input type="text" id="adminPartNumber">
+                </div>
+
+              
                 <div class="setting-group">
                     <label for="newLowerLimit">Lower Limit (saat ini: <span id="currentLower"></span>s)</label>
                     <input type="number" id="newLowerLimit" min="1" step="0.01">
