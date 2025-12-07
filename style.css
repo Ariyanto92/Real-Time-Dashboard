@@ -1,9 +1,8 @@
+/* === CSS ASLI ANDA === */
 * {
-    /* PERBAIKAN 1: Hapus padding tanpa unit. Cukup atur margin & box-sizing. */
     box-sizing: border-box;
     margin: 0;
-    /* padding: 5; <== Dihapus/diperbaiki, karena '5' tanpa unit tidak valid */
-    padding: 0; /* Mengatur ke 0 adalah praktik yang lebih aman untuk * */
+    padding: 5;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -16,7 +15,7 @@ body {
 }
 
 .container {
-    max-width: 1400px; 
+    max-width: 1920px; 
     margin: 0 auto;
 }
 
@@ -24,7 +23,7 @@ header {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-    padding: 10px 15px; /* Sedikit penyesuaian padding agar lebih terlihat rapi */
+    padding: 5px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 15px;
     backdrop-filter: blur(10px);
@@ -142,7 +141,7 @@ button:hover {
     cursor: pointer;
     transition: background 0.3s;
     font-weight: 600;
-    margin-left: 10px; 
+    margin-left: 10px; /* Jarak antara toggle bahasa dan admin */
 }
 .lang-toggle:hover {
     background: #2980b9;
@@ -254,10 +253,10 @@ button:hover {
 }
 
 .reset-btn {
-    background: #c0392b !important; 
+    background: #c0392b !important; /* Merah untuk reset */
 }
 .save-btn {
-    background: #27ae60 !important; 
+    background: #27ae60 !important; /* Hijau untuk simpan */
 }
 /* --- END GAYA MODAL/POPUP BARU --- */
 
@@ -477,7 +476,7 @@ button:hover {
     /* Mengubah Kontrol kembali ke tata letak kolom agar rapi di layar kecil */
     .controls, .table-controls { 
         flex-direction: column; 
-        align-items: stretch; 
+        align-items: stretch; /* Mengambil lebar penuh */
     }
     .filter-group, .custom-range, .table-controls .left, .table-controls .right { 
         flex-direction: column; 
@@ -490,7 +489,7 @@ button:hover {
     /* Menghapus dorongan 'margin-left: auto' agar tombol berada di tengah */
     #reloadGroup {
         flex-direction: column;
-        align-items: center; 
+        align-items: center; /* Tetap pusatkan tombol dan teks di tengah */
         width: 100%;
         margin-left: 0; 
     }
