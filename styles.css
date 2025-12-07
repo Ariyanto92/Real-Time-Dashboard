@@ -1,8 +1,9 @@
-/* === CSS ASLI ANDA === */
 * {
+    /* PERBAIKAN 1: Hapus padding tanpa unit. Cukup atur margin & box-sizing. */
     box-sizing: border-box;
     margin: 0;
-    padding: 5;
+    /* padding: 5; <== Dihapus/diperbaiki, karena '5' tanpa unit tidak valid */
+    padding: 0; /* Mengatur ke 0 adalah praktik yang lebih aman untuk * */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -15,7 +16,7 @@ body {
 }
 
 .container {
-    max-width: 1920px; 
+    max-width: 1400px; 
     margin: 0 auto;
 }
 
@@ -23,7 +24,7 @@ header {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-    padding: 5px;
+    padding: 10px 15px; /* Sedikit penyesuaian padding agar lebih terlihat rapi */
     background: rgba(255, 255, 255, 0.1);
     border-radius: 15px;
     backdrop-filter: blur(10px);
@@ -64,6 +65,45 @@ h1 {
     color: #a0d2eb;
     font-size: 1.1rem;
 }
+
+/* === INFO MACHINE, PART NAME, PART NUMBER === */
+.machine-info {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;     /* Jarak dari header 10px */
+    margin-bottom: 10px;  /* Jarak ke elemen bawah 10px */
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    flex-wrap: wrap;
+}
+
+.info-item {
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+}
+
+.info-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #a0d2eb;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.info-value {
+    background: rgba(0, 0, 0, 0.25);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+}
+/* === END INFO MACHINE & PART === */
+
 
 /* === KONTROL UTAMA: MEMISAHKAN FILTER DAN REFRESH === */
 .controls {
@@ -141,7 +181,7 @@ button:hover {
     cursor: pointer;
     transition: background 0.3s;
     font-weight: 600;
-    margin-left: 10px; /* Jarak antara toggle bahasa dan admin */
+    margin-left: 10px; 
 }
 .lang-toggle:hover {
     background: #2980b9;
@@ -253,10 +293,10 @@ button:hover {
 }
 
 .reset-btn {
-    background: #c0392b !important; /* Merah untuk reset */
+    background: #c0392b !important; 
 }
 .save-btn {
-    background: #27ae60 !important; /* Hijau untuk simpan */
+    background: #27ae60 !important; 
 }
 /* --- END GAYA MODAL/POPUP BARU --- */
 
@@ -476,7 +516,7 @@ button:hover {
     /* Mengubah Kontrol kembali ke tata letak kolom agar rapi di layar kecil */
     .controls, .table-controls { 
         flex-direction: column; 
-        align-items: stretch; /* Mengambil lebar penuh */
+        align-items: stretch; 
     }
     .filter-group, .custom-range, .table-controls .left, .table-controls .right { 
         flex-direction: column; 
@@ -489,7 +529,7 @@ button:hover {
     /* Menghapus dorongan 'margin-left: auto' agar tombol berada di tengah */
     #reloadGroup {
         flex-direction: column;
-        align-items: center; /* Tetap pusatkan tombol dan teks di tengah */
+        align-items: center; 
         width: 100%;
         margin-left: 0; 
     }
