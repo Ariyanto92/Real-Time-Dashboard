@@ -11,6 +11,7 @@
 
   let LOWER_LIMIT = parseFloat(localStorage.getItem('lowerLimit')) || 55;
   let UPPER_LIMIT = parseFloat(localStorage.getItem('upperLimit')) || 65;
+  let TARGET_CYCLE_TIME = parseFloat(localStorage.getItem('targetCycleTime')) || 60.00;
 
   const ADMIN_USERNAME = 'admin';
   const ADMIN_PASSWORD = '123';
@@ -87,7 +88,8 @@
         resetButton: 'Reset',
         resetDataButton: 'Reset Data',
         saveMachinePartButton: 'Simpan',
-        closeButton: 'Tutup'
+        closeButton: 'Tutup',
+        statTarget: 'Target'
       },
       en: { 
         title: 'Dashboard', 
@@ -129,7 +131,8 @@
         resetButton: 'Reset',
         resetDataButton: 'Reset Data',
         saveMachinePartButton: 'Save',
-        closeButton: 'Close'
+        closeButton: 'Close',
+        statTarget: 'Target'
       }
     };
   }
@@ -171,16 +174,21 @@
       // Load current limits
       const savedLower = localStorage.getItem('lowerLimit') || LOWER_LIMIT;
       const savedUpper = localStorage.getItem('upperLimit') || UPPER_LIMIT;
+      const savedTarget = localStorage.getItem('targetCycleTime') || TARGET_CYCLE_TIME;
 
       const currentLowerEl = $('currentLower');
       const currentUpperEl = $('currentUpper');
+      const currentTargetEl = $('currentTarget');
       const newLowerEl = $('newLowerLimit');
       const newUpperEl = $('newUpperLimit');
+      const newTargetEl = $('newTargetLimit');
 
       if (currentLowerEl) currentLowerEl.textContent = parseFloat(savedLower).toFixed(2);
       if (currentUpperEl) currentUpperEl.textContent = parseFloat(savedUpper).toFixed(2);
+      if (currentTargetEl) currentTargetEl.textContent = parseFloat(savedTarget).toFixed(2);
       if (newLowerEl) newLowerEl.value = savedLower;
       if (newUpperEl) newUpperEl.value = savedUpper;
+      if (newTargetEl) newTargetEl.value = savedTarget;
 
       // Load machine/part info
       const adminMachine = $('adminMachine');
@@ -247,6 +255,9 @@
       if (translations[lang] && translations[lang][key]) el.placeholder = translations[lang][key];
     });
 
+    // Update target display in stat card
+    updateTargetDisplay()
+    
     // Update modal titles
     const loginModalTitle = $('adminLoginTitle');
     if (loginModalTitle) loginModalTitle.textContent = tr('loginTitle');
@@ -280,11 +291,17 @@
     const partNumberLabel = $('partNumberLabel');
     if (partNumberLabel) partNumberLabel.textContent = tr('partNumberLabel');
     
+    const currentTargetLabel = $('currentTargetLabel');
+    if (currentTargetLabel) currentTargetLabel.textContent = tr('currentTargetLabel');
+    
     const currentLowerLabel = $('currentLowerLabel');
     if (currentLowerLabel) currentLowerLabel.textContent = tr('currentLowerLabel');
     
     const currentUpperLabel = $('currentUpperLabel');
     if (currentUpperLabel) currentUpperLabel.textContent = tr('currentUpperLabel');
+    
+    const newTargetLabel = $('newTargetLabel');
+    if (newTargetLabel) newTargetLabel.textContent = tr('newTargetLabel');
     
     const newLowerLabel = $('newLowerLabel');
     if (newLowerLabel) newLowerLabel.textContent = tr('newLowerLabel');
@@ -354,11 +371,32 @@
       renderTable(false);
     }
   }
+  
+  // Fungsi untuk update target display di stat card
+  function updateTargetDisplay() {
+    const targetElement = document.querySelector('.stat-subvalue span[data-key="statTarget"]');
+    if (targetElement) {
+      // Update parent element text
+      const parent = targetElement.parentElement;
+      if (parent) {
+        parent.textContent = `${tr('statTarget')}: ${TARGET_CYCLE_TIME.toFixed(2)}s`;
+      }
+    }
+  }
 
   // -------------------
   // Event bindings & init
   // -------------------
   document.addEventListener('DOMContentLoaded', function() {
+    // Load target from localStorage
+    const savedTarget = localStorage.getItem('targetCycleTime');
+    if (savedTarget) {
+      TARGET_CYCLE_TIME = parseFloat(savedTarget);
+    }
+    
+    // Update target display awal
+    updateTargetDisplay();
+    
     // initial translations
     updateTextContent(currentLanguage);
 
@@ -517,25 +555,42 @@
         
         const newLower = parseFloat(($('newLowerLimit') || {}).value);
         const newUpper = parseFloat(($('newUpperLimit') || {}).value);
+        const newTarget = parseFloat(($('newTargetLimit') || {}).value);
         const limitMsg = $('limitMessage');
 
-        if (isNaN(newLower) || isNaN(newUpper) || newLower <= 0 || newUpper <= newLower) {
+        // Validasi input
+        if (isNaN(newLower) || isNaN(newUpper) || isNaN(newTarget) || 
+            newLower <= 0 || newUpper <= newLower || newTarget <= 0) {
           if (limitMsg) { 
-            limitMsg.textContent = currentLanguage === 'id' ? tr('limitError') : tr('limitError'); 
+            limitMsg.textContent = currentLanguage === 'id' ? 
+              'Semua nilai harus positif dan lower < upper!' : 
+              'All values must be positive and lower < upper!'; 
             limitMsg.style.color = 'red'; 
           }
           return;
         }
 
+        // Simpan ke localStorage
         localStorage.setItem('lowerLimit', newLower);
         localStorage.setItem('upperLimit', newUpper);
+        localStorage.setItem('targetCycleTime', newTarget);
+        
+        // Update variabel global
         LOWER_LIMIT = newLower;
         UPPER_LIMIT = newUpper;
+        TARGET_CYCLE_TIME = newTarget;
 
+        // Update tampilan current values
         const currentLowerEl = $('currentLower');
         const currentUpperEl = $('currentUpper');
+        const currentTargetEl = $('currentTarget');
+        
         if (currentLowerEl) currentLowerEl.textContent = newLower.toFixed(2);
         if (currentUpperEl) currentUpperEl.textContent = newUpper.toFixed(2);
+        if (currentTargetEl) currentTargetEl.textContent = newTarget.toFixed(2);
+
+        // Update target display di stat card
+        updateTargetDisplay();
 
         if (limitMsg) { 
           limitMsg.textContent = tr('saveSuccess'); 
@@ -559,24 +614,38 @@
           return;
         }
         
-        const confirmation = confirm(currentLanguage === 'id' ? "Reset limits ke nilai default (55 dan 65)?" : "Reset limits to default values (55 and 65)?");
+        const confirmation = confirm(currentLanguage === 'id' ? 
+          "Reset limits ke nilai default (Lower: 55, Upper: 65, Target: 60)?" : 
+          "Reset limits to default values (Lower: 55, Upper: 65, Target: 60)?");
         if (!confirmation) return;
 
+        // Hapus dari localStorage
         localStorage.removeItem('lowerLimit');
         localStorage.removeItem('upperLimit');
+        localStorage.removeItem('targetCycleTime');
 
-        const defaultLower = 55, defaultUpper = 65;
+        // Set nilai default
+        const defaultLower = 55, defaultUpper = 65, defaultTarget = 60;
         LOWER_LIMIT = defaultLower; 
         UPPER_LIMIT = defaultUpper;
+        TARGET_CYCLE_TIME = defaultTarget;
 
+        // Update tampilan
         const currentLowerEl = $('currentLower');
         const currentUpperEl = $('currentUpper');
+        const currentTargetEl = $('currentTarget');
         const newLowerEl = $('newLowerLimit');
         const newUpperEl = $('newUpperLimit');
+        const newTargetEl = $('newTargetLimit');
         if (currentLowerEl) currentLowerEl.textContent = defaultLower.toFixed(2);
         if (currentUpperEl) currentUpperEl.textContent = defaultUpper.toFixed(2);
+        if (currentTargetEl) currentTargetEl.textContent = defaultTarget.toFixed(2);
         if (newLowerEl) newLowerEl.value = defaultLower;
         if (newUpperEl) newUpperEl.value = defaultUpper;
+        if (newTargetEl) newTargetEl.value = defaultTarget;
+
+        // Update target display di stat card
+        updateTargetDisplay();
 
         const limitMsg = $('limitMessage');
         if (limitMsg) { 
@@ -629,15 +698,7 @@
     }
   });
 
-  // -------------------
-  // Sisanya tetap sama...
-  // (Fungsi setFilterRange, initCharts, loadDataFromSheets, processData,
-  // updateCharts, statusFromCycle, renderTable, handleSort, goToPage,
-  // exportCurrentToCSV, updateLimits, resetAllData, loadMachinePart, saveMachinePart)
-  // -------------------
-  
-  // Sisipkan fungsi-fungsi yang sama dari kode sebelumnya...
-  // (Untuk menjaga agar jawaban tidak terlalu panjang, saya akan tuliskan bagian-bagian penting saja)
+  // Fungsi Filter
   
   function setFilterRange(preset, start = null, end = null) {
     const now = moment().startOf('day');
@@ -1182,4 +1243,7 @@
   }
 
   window.saveMachinePart = saveMachinePart;
+  window.handleSort = handleSort;
+  window.goToPage = goToPage;
+  window.exportCurrentToCSV = exportCurrentToCSV;
 })();
