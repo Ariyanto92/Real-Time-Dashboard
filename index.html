@@ -227,10 +227,12 @@
         </div>
         
         <div class="stats-cards">
-            <div class="stat-card">
-                <h3 data-key="statAvgCycle">RATA-RATA CYCLE TIME</h3>
-                <div class="stat-value" id="avgCycleTime">40.75s</div>
-                <div class="stat-subvalue"><span data-key="statTarget">Target</span>: 60.00s</div>
+    <div class="stat-card">
+        <h3 data-key="statAvgCycle">RATA-RATA CYCLE TIME</h3>
+        <div class="stat-value" id="avgCycleTime">40.75s</div>
+        <div class="stat-subvalue" id="targetCycleTimeDisplay">
+            <span data-key="statTarget">Target</span>: <span id="targetValue">60.00</span>s
+        </div>
             </div>
             <div class="stat-card">
                 <h3 data-key="statTotalCycles">TOTAL CYCLE</h3>
@@ -330,22 +332,28 @@
             </div>
             
             <!-- SECTION 2: CYCLE TIME LIMITS -->
-            <div class="admin-section">
-                <h4>CYCLE TIME LIMITS</h4>
-                <div class="form-group">
-                    <label id="currentLowerLabel" data-key="currentLowerLabel">Lower Limit (saat ini: <span id="currentLower">15.00</span>s)</label>
-                    <input type="number" id="newLowerLimit" step="0.01" placeholder="15.00" data-key-placeholder="newLowerLabel">
-                </div>
-                <div class="form-group">
-                    <label id="currentUpperLabel" data-key="currentUpperLabel">Upper Limit (saat ini: <span id="currentUpper">25.00</span>s)</label>
-                    <input type="number" id="newUpperLimit" step="0.01" placeholder="25.00" data-key-placeholder="newUpperLabel">
-                </div>
-                <div id="limitMessage" class="message"></div>
-                <div class="button-group">
-                    <button id="saveLimitsBtn" class="btn-primary" data-key="saveButton">Simpan Limits</button>
-                    <button id="resetLimitsBtn" class="btn-secondary" data-key="resetButton">Reset ke Default</button>
-                </div>
+            
+        <div class="admin-section">
+            <h4>CYCLE TIME LIMITS</h4>
+          <div class="form-group">
+                <label id="currentTargetLabel" data-key="currentTargetLabel">Target Cycle Time (saat ini: <span id="currentTarget">60.00</span>s)</label>
+                <input type="number" id="newTargetLimit" step="0.01" placeholder="60.00" data-key-placeholder="newTargetLabel">
             </div>
+            <div class="form-group">
+                <label id="currentLowerLabel" data-key="currentLowerLabel">Lower Limit (saat ini: <span id="currentLower">15.00</span>s)</label>
+                <input type="number" id="newLowerLimit" step="0.01" placeholder="15.00" data-key-placeholder="newLowerLabel">
+            </div>
+            <div class="form-group">
+                <label id="currentUpperLabel" data-key="currentUpperLabel">Upper Limit (saat ini: <span id="currentUpper">25.00</span>s)</label>
+                <input type="number" id="newUpperLimit" step="0.01" placeholder="25.00" data-key-placeholder="newUpperLabel">
+            </div>
+            
+            <div id="limitMessage" class="message"></div>
+            <div class="button-group">
+                <button id="saveLimitsBtn" class="btn-primary" data-key="saveButton">Simpan Limits</button>
+                <button id="resetLimitsBtn" class="btn-secondary" data-key="resetButton">Reset ke Default</button>
+            </div>
+        </div>
             
             <!-- SECTION 3: DATA MANAGEMENT -->
             <div class="admin-section">
@@ -355,13 +363,6 @@
             </div>
         </div>
     </div>
-
-    <!-- ===== HAPUS MODAL LAMA YANG GABUNGAN ===== -->
-    <!-- 
-    <div id="adminModal" class="modal">
-        ... (kode lama dihapus) ...
-    </div>
-    -->
 
     <script src="script.js"></script>
 </body>
