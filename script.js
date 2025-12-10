@@ -489,7 +489,7 @@
 
     // auto refresh
     if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-    autoRefreshInterval = setInterval(loadDataFromSheets, 10000);
+    autoRefreshInterval = setInterval(loadDataFromSheets, 60000);
 
     // ADMIN LOGIN MODAL HANDLERS
     const adminToggle = $('adminLoginToggle');
